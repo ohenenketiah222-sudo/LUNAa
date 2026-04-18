@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopKepa – Provision Shop Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a7a4a;
+    --green-light: #e8f5ee;
+    --green-mid: #2ea866;
+    --amber: #c97b1a;
+    --amber-light: #fef3dc;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --gold: #f0a500;
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e2ddd4;
+    --text: #1c1a16;
+    --muted: #6b6560;
+    --accent: #1a7a4a;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .topbar {
+    background: var(--green);
+    color: white;
+    padding: 0 1.5rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--gold); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .notif-bell {
+    position: relative;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+  }
+  .notif-bell:hover { background: rgba(255,255,255,0.25); }
+  .notif-badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    background: var(--gold);
+    color: #1c1a16;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: calc(100vh - 60px); }
+
+  /* SIDEBAR NAV */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-item:hover { background: var(--green-light); color: var(--green); }
+  .nav-item.active {
+    background: var(--green-light);
+    color: var(--green);
+    border-left-color: var(--green);
+    font-weight: 600;
+  }
+  .nav-icon { font-size: 16px; }
+  .nav-section {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 16px 20px 4px;
+  }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; padding: 1.5rem; overflow-y: auto; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .stat-num.green { color: var(--green); }
+  .stat-num.amber { color: var(--amber); }
+  .stat-num.red { color: var(--red); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: #145e38; }
+  .btn-amber { background: var(--amber); color: white; }
+  .btn-amber:hover { background: #a86314; }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { background: #a02e23; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: var(--bg); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: #f9f7f3;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+  }
+  td {
+    padding: 11px 14px;
+    font-size: 13.5px;
+    border-top: 1px solid #f0ede7;
+  }
+  tr:hover td { background: #faf9f6; }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 4px;
+  }
+  .badge-ok { background: var(--green-light); color: var(--green); }
+  .badge-low { background: var(--amber-light); color: var(--amber); }
+  .badge-out { background: var(--red-light); color: var(--red); }
+
+  /* STOCK BAR */
+  .stock-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+  .stock-bar-bg {
+    flex: 1; height: 6px;
+    background: #e8e4dc;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+  /* SEARCH + FILTER */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .search-box input {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    flex: 1;
+    color: var(--text);
+  }
+  .search-icon { color: var(--muted); font-size: 14px; }
+  select.filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 460px;
+    padding: 1.5rem;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+  }
+  .form-row { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--green); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.2rem; }
+
+  /* NOTIFICATIONS PANEL */
+  .notif-panel {
+    position: fixed;
+    top: 60px; right: 0;
+    width: 340px;
+    max-height: calc(100vh - 60px);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    z-index: 150;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  .notif-panel.open { transform: translateX(0); }
+  .notif-panel-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+  .notif-panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+  .notif-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0ede7;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+  .notif-item .notif-type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .notif-item.out .notif-type { color: var(--red); }
+  .notif-item.low .notif-type { color: var(--amber); }
+  .notif-item .notif-msg { font-size: 13px; line-height: 1.5; }
+  .notif-item .notif-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .notif-empty { padding: 2rem; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* SEND NOTIFICATION FORM */
+  .send-notif-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .send-notif-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  /* ALERT CARDS */
+  .alert-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid;
+  }
+  .alert-card.out { background: var(--red-light); border-color: #f5c6c3; }
+  .alert-card.low { background: var(--amber-light); border-color: #f5dfa0; }
+  .alert-icon { font-size: 18px; }
+  .alert-body { flex: 1; }
+  .alert-title { font-size: 13px; font-weight: 700; }
+  .alert-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .alert-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+  /* UPLOAD AREA */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 1rem;
+  }
+  .upload-zone:hover { border-color: var(--green); background: var(--green-light); }
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-text { font-size: 14px; color: var(--muted); }
+  .upload-text strong { color: var(--green); }
+
+  /* CATEGORY PILLS */
+  .cat-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .cat-pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .cat-pill.active, .cat-pill:hover { background: var(--green); color: white; border-color: var(--green); }
+
+  /* TOAST */
+  .toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--text);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    animation: toastIn 0.3s ease;
+    display: flex; align-items: center; gap: 8px;
+    min-width: 220px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .toast.success { background: var(--green); }
+  .toast.warning { background: var(--amber); }
+  .toast.error { background: var(--red); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ACTION BTN IN TABLE */
+  .tbl-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .tbl-btn:hover { background: var(--bg); }
+  .tbl-btn.danger { border-color: #f5c6c3; color: var(--red); }
+  .tbl-btn.danger:hover { background: var(--red-light); }
+
+  .page-header { margin-bottom: 1.5rem; }
+  .page-header h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+  .notif-recipient-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--green-light); color: var(--green);
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">Shop<span>Kepa</span> 🛒</div>
+  <div class="topbar-right">
+    <button class="notif-bell" onclick="toggleNotifPanel()">
+      🔔
+      <span class="notif-badge" id="notif-count">0</span>
+    </button>
+    <div style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.85);">Maame Ama's Shop</div>
+  </div>
+</div>
+
+<!-- APP LAYOUT -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">Menu</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('inventory')"><span class="nav-icon">📦</span> Inventory</div>
+    <div class="nav-item" onclick="showPage('add')"><span class="nav-icon">➕</span> Add Stock</div>
+    <div class="nav-section">Alerts</div>
+    <div class="nav-item" onclick="showPage('alerts')"><span class="nav-icon">⚠️</span> Stock Alerts</div>
+    <div class="nav-item" onclick="showPage('notifications')"><span class="nav-icon">📨</span> Send Restock Request</div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Settings</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Good morning, Maame Ama 👋</h1>
+        <p>Here's your shop overview for today</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Products</div>
+          <div class="stat-num green" id="stat-total">0</div>
+          <div class="stat-sub">items in stock</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">In Stock</div>
+          <div class="stat-num green" id="stat-ok">0</div>
+          <div class="stat-sub">sufficient stock</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Running Low</div>
+          <div class="stat-num amber" id="stat-low">0</div>
+          <div class="stat-sub">below threshold</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Out of Stock</div>
+          <div class="stat-num red" id="stat-out">0</div>
+          <div class="stat-sub">need restocking</div>
+        </div>
+      </div>
+
+      <!-- Critical Alerts -->
+      <div class="section-header">
+        <div class="section-title">⚠️ Stock Alerts</div>
+        <button class="btn btn-ghost" onclick="showPage('alerts')">View all →</button>
+      </div>
+      <div id="dashboard-alerts">
+        <div style="text-align:center; color:var(--muted); padding:2rem; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);">
+          All items are well stocked 🎉
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;">
+        <div class="section-header">
+          <div class="section-title">📦 Recent Inventory</div>
+          <button class="btn btn-ghost" onclick="showPage('inventory')">See all →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dash-table-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem;">No items yet. Add your first product!</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div class="page-header">
+        <h1>📦 Inventory</h1>
+        <p>Manage all your provision items</p>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search items..." oninput="renderInventory()">
+        </div>
+        <select class="filter-select" id="filter-cat" onchange="renderInventory()">
+          <option value="">All Categories</option>
+        </select>
+        <select class="filter-select" id="filter-status" onchange="renderInventory()">
+          <option value="">All Status</option>
+          <option value="ok">In Stock</option>
+          <option value="low">Low Stock</option>
+          <option value="out">Out of Stock</option>
+        </select>
+        <button class="btn btn-primary" onclick="showPage('add')">+ Add Item</button>
+      </div>
+
+      <div class="cat-pills" id="cat-pills">
+        <div class="cat-pill active" onclick="filterByPill(this, '')">All</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Stock Level</th>
+              <th>Low Alert</th>
+              <th>Price (GH₵)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-table-body">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No items yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADD STOCK -->
+    <div class="page" id="page-add">
+      <div class="page-header">
+        <h1>➕ Add / Upload Stock</h1>
+        <p>Add new provisions or upload a list</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="send-notif-card">
+            <h3>Add Single Item</h3>
+            <div class="form-row">
+              <label class="form-label">Product Name</label>
+              <input type="text" class="form-input" id="add-name" placeholder="e.g. Cowbell Milk Tin 400g">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Category</label>
+              <select class="form-input" id="add-cat">
+                <option value="Beverages">Beverages</option>
+                <option value="Canned Goods">Canned Goods</option>
+                <option value="Grains & Cereals">Grains & Cereals</option>
+                <option value="Cooking Essentials">Cooking Essentials</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Toiletries">Toiletries</option>
+                <option value="Baby Items">Baby Items</option>
+                <option value="Cleaning Supplies">Cleaning Supplies</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="two-col" style="gap:8px;">
+              <div class="form-row">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-input" id="add-qty" placeholder="e.g. 50" min="0">
+              </div>
+              <div class="form-row">
+                <label class="form-label">Low Stock Alert At</label>
+                <input type="number" class="form-input" id="add-threshold" placeholder="e.g. 10" min="1">
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Price per Unit (GH₵)</label>
+              <input type="number" class="form-input" id="add-price" placeholder="e.g. 12.50" step="0.01" min="0">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Supplier / Notes (Optional)</label>
+              <input type="text" class="form-input" id="add-notes" placeholder="e.g. Kantanka Wholesale, Accra">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="addItem()">Save Item</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="send-notif-card">
+            <h3>Upload Bulk Items (CSV)</h3>
+            <div class="upload-zone" onclick="document.getElementById('csv-upload').click()">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text"><strong>Click to upload</strong> a CSV file</div>
+              <div class="upload-text" style="margin-top:4px; font-size:12px;">Format: Name, Category, Qty, Threshold, Price</div>
+              <input type="file" id="csv-upload" accept=".csv" style="display:none;" onchange="handleCSV(event)">
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:1rem;">
+              <strong>Sample CSV format:</strong><br>
+              <code style="font-size:11px; background:var(--bg); padding:6px 8px; border-radius:6px; display:block; margin-top:6px; line-height:1.8;">
+                Name,Category,Qty,Threshold,Price<br>
+                Milo 400g,Beverages,30,8,18.50<br>
+                Indomie Noodles,Snacks,100,20,1.50<br>
+                Cowbell Milk,Beverages,20,5,12.00
+              </code>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="downloadSampleCSV()">⬇ Download Sample CSV</button>
+          </div>
+
+          <div class="send-notif-card">
+            <h3>Quick Update Stock Quantity</h3>
+            <div class="form-row">
+              <label class="form-label">Select Item</label>
+              <select class="form-input" id="update-item-select">
+                <option value="">-- Choose item --</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">New Quantity</label>
+              <input type="number" class="form-input" id="update-qty" placeholder="Enter new stock count" min="0">
+            </div>
+            <button class="btn btn-amber" style="width:100%;justify-content:center;" onclick="quickUpdateQty()">Update Stock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="page" id="page-alerts">
+      <div class="page-header">
+        <h1>⚠️ Stock Alerts</h1>
+        <p>Items that need your attention right now</p>
+      </div>
+      <div id="alerts-container">
+        <div style="text-align:center; color:var(--muted); padding:3rem; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);">
+          🎉 All items are well stocked! No alerts.
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <h1>📨 Send Restock Request</h1>
+        <p>Notify your supplier or business partner to restock items</p>
+      </div>
+
+      <div class="two-col">
+        <div class="send-notif-card">
+          <h3>Compose Restock Request</h3>
+          <div class="form-row">
+            <label class="form-label">Recipient Name</label>
+            <input type="text" class="form-input" id="notif-recipient" placeholder="e.g. Kwame (Supplier)">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Recipient Phone / WhatsApp</label>
+            <input type="text" class="form-input" id="notif-phone" placeholder="e.g. 0244123456">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Select Item(s) to Restock</label>
+            <select class="form-input" id="notif-item-select">
+              <option value="">-- Select item --</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Quantity to Order</label>
+            <input type="number" class="form-input" id="notif-qty" placeholder="e.g. 50" min="1">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Urgency</label>
+            <select class="form-input" id="notif-urgency">
+              <option value="normal">Normal – Restock within a few days</option>
+              <option value="urgent">Urgent – Out of stock now!</option>
+              <option value="low">Low – Running low, plan ahead</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Additional Message (Optional)</label>
+            <textarea class="form-input" id="notif-message" rows="3" placeholder="Any extra info for your supplier..."></textarea>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="sendNotification()">📨 Send Restock Request</button>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:6px;" onclick="sendWhatsApp()">💬 Send via WhatsApp</button>
+        </div>
+
+        <div>
+          <div class="send-notif-card">
+            <h3>Auto-Alert Settings</h3>
+            <div style="font-size:13px; color:var(--muted); margin-bottom:1rem;">Configure who gets notified when stock drops below threshold.</div>
+            <div class="form-row">
+              <label class="form-label">Default Supplier Name</label>
+              <input type="text" class="form-input" id="default-supplier" placeholder="e.g. Kofi Wholesale">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Default Supplier Phone</label>
+              <input type="text" class="form-input" id="default-phone" placeholder="e.g. 0244000000">
+            </div>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="saveSettings()">Save Settings</button>
+          </div>
+
+          <div class="send-notif-card">
+            <h3>Notification History</h3>
+            <div id="notif-history">
+              <div style="font-size:13px;color:var(--muted);">No notifications sent yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h1>⚙️ Settings</h1>
+        <p>Customize your shop profile</p>
+      </div>
+      <div class="send-notif-card" style="max-width:500px;">
+        <h3>Shop Profile</h3>
+        <div class="form-row">
+          <label class="form-label">Shop Name</label>
+          <input type="text" class="form-input" id="shop-name" placeholder="e.g. Maame Ama's Provision Shop">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Owner Name</label>
+          <input type="text" class="form-input" id="owner-name" placeholder="e.g. Maame Ama Owusu">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-input" id="shop-location" placeholder="e.g. Kasoa, Central Region">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Default Low Stock Threshold</label>
+          <input type="number" class="form-input" id="default-threshold" value="10" min="1">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        <button class="btn btn-red" style="margin-left:8px;" onclick="clearAll()">🗑 Clear All Data</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-panel-header">
+    <div class="notif-panel-title">🔔 Notifications</div>
+    <button class="tbl-btn" onclick="clearNotifications()">Clear all</button>
+  </div>
+  <div id="notif-list">
+    <div class="notif-empty">No notifications yet.</div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Item -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Item</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <label class="form-label">Product Name</label>
+      <input type="text" class="form-input" id="edit-name">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Category</label>
+      <input type="text" class="form-input" id="edit-cat">
+    </div>
+    <div class="two-col" style="gap:8px;">
+      <div class="form-row">
+        <label class="form-label">Quantity</label>
+        <input type="number" class="form-input" id="edit-qty" min="0">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Low Alert At</label>
+        <input type="number" class="form-input" id="edit-threshold" min="1">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Price (GH₵)</label>
+      <input type="number" class="form-input" id="edit-price" step="0.01" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ============ DATA ============
+let items = JSON.parse(localStorage.getItem('shopkepa_items') || '[]');
+let notifications = JSON.parse(localStorage.getItem('shopkepa_notifs') || '[]');
+let notifHistory = JSON.parse(localStorage.getItem('shopkepa_history') || '[]');
+
+// Seed demo data if empty
+if (items.length === 0) {
+  items = [
+    { id: 1, name: 'Milo 400g Tin', category: 'Beverages', qty: 28, threshold: 10, price: 18.50, notes: 'Unilever' },
+    { id: 2, name: 'Cowbell Milk 400g', category: 'Beverages', qty: 5, threshold: 10, price: 12.00, notes: '' },
+    { id: 3, name: 'Indomie Onion Chicken', category: 'Snacks', qty: 0, threshold: 20, price: 1.80, notes: 'Dufil' },
+    { id: 4, name: 'Uncle Ben\'s Rice 5kg', category: 'Grains & Cereals', qty: 12, threshold: 5, price: 65.00, notes: '' },
+    { id: 5, name: 'Frytol Vegetable Oil 2L', category: 'Cooking Essentials', qty: 8, threshold: 10, price: 45.00, notes: '' },
+    { id: 6, name: 'Peak Milk Sachet x20', category: 'Beverages', qty: 0, threshold: 5, price: 22.00, notes: '' },
+    { id: 7, name: 'Geisha Sardines', category: 'Canned Goods', qty: 35, threshold: 10, price: 5.50, notes: '' },
+    { id: 8, name: 'Sunlight Soap 100g', category: 'Cleaning Supplies', qty: 50, threshold: 15, price: 2.20, notes: '' },
+    { id: 9, name: 'Pampers Size 3 x20', category: 'Baby Items', qty: 3, threshold: 5, price: 55.00, notes: '' },
+    { id: 10, name: 'Nescafe 3-in-1 x10', category: 'Beverages', qty: 18, threshold: 8, price: 14.50, notes: '' },
+  ];
+  saveItems();
+}
+
+function saveItems() {
+  localStorage.setItem('shopkepa_items', JSON.stringify(items));
+}
+function saveNotifs() {
+  localStorage.setItem('shopkepa_notifs', JSON.stringify(notifications));
+  localStorage.setItem('shopkepa_history', JSON.stringify(notifHistory));
+}
+
+// ============ NAVIGATION ============
+let activePillFilter = '';
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + page + "'")) n.classList.add('active');
+  });
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'inventory') renderInventory();
+  if (page === 'alerts') renderAlerts();
+  if (page === 'notifications') populateNotifSelects();
+  if (page === 'add') populateAddSelects();
+  closeNotifPanel();
+}
+
+// ============ STATUS HELPER ============
+function getStatus(item) {
+  if (item.qty === 0) return 'out';
+  if (item.qty <= item.threshold) return 'low';
+  return 'ok';
+}
+
+function statusBadge(status) {
+  if (status === 'out') return '<span class="badge badge-out">🔴 Out of Stock</span>';
+  if (status === 'low') return '<span class="badge badge-low">🟡 Low Stock</span>';
+  return '<span class="badge badge-ok">🟢 In Stock</span>';
+}
+
+function stockBar(item) {
+  const max = Math.max(item.threshold * 3, item.qty + 1);
+  const pct = Math.min(100, Math.round((item.qty / max) * 100));
+  const status = getStatus(item);
+  const color = status === 'out' ? '#c0392b' : status === 'low' ? '#c97b1a' : '#1a7a4a';
+  return `<div class="stock-bar-wrap">
+    <div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+    <span style="font-size:12px;font-weight:600;min-width:28px;text-align:right;">${item.qty}</span>
+  </div>`;
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+  const total = items.length;
+  const ok = items.filter(i => getStatus(i) === 'ok').length;
+  const low = items.filter(i => getStatus(i) === 'low').length;
+  const out = items.filter(i => getStatus(i) === 'out').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-ok').textContent = ok;
+  document.getElementById('stat-low').textContent = low;
+  document.getElementById('stat-out').textContent = out;
+
+  // Alerts
+  const alertItems = items.filter(i => getStatus(i) !== 'ok');
+  const alertsDiv = document.getElementById('dashboard-alerts');
+  if (alertItems.length === 0) {
+    alertsDiv.innerHTML = '<div style="text-align:center; color:var(--muted); padding:1.5rem; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);">All items are well stocked 🎉</div>';
+  } else {
+    alertsDiv.innerHTML = alertItems.slice(0, 5).map(item => {
+      const s = getStatus(item);
+      return `<div class="alert-card ${s}">
+        <div class="alert-icon">${s === 'out' ? '🔴' : '🟡'}</div>
+        <div class="alert-body">
+          <div class="alert-title">${item.name}</div>
+          <div class="alert-desc">${s === 'out' ? 'Out of stock' : `Only ${item.qty} left (alert at ${item.threshold})`} · ${item.category}</div>
+          <div class="alert-actions">
+            <button class="tbl-btn" onclick="openEditModal(${item.id})">Update Stock</button>
+            <button class="tbl-btn" onclick="quickNotif(${item.id})">📨 Request Restock</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent
+  const tbody = document.getElementById('dash-table-body');
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem;">No items yet. Add your first product!</td></tr>';
+  } else {
+    tbody.innerHTML = items.slice(0, 6).map(item => `
+      <tr>
+        <td><strong>${item.name}</strong></td>
+        <td><span style="font-size:12px;color:var(--muted);">${item.category}</span></td>
+        <td>${item.qty}</td>
+        <td>${statusBadge(getStatus(item))}</td>
+      </tr>`).join('');
+  }
+}
+
+// ============ INVENTORY ============
+function getCats() {
+  const cats = [...new Set(items.map(i => i.category))].sort();
+  return cats;
+}
+
+function renderInventory() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const catFilter = document.getElementById('filter-cat').value;
+  const statusFilter = document.getElementById('filter-status').value;
+
+  // Update category dropdowns
+  const catSelect = document.getElementById('filter-cat');
+  const currentVal = catSelect.value;
+  catSelect.innerHTML = '<option value="">All Categories</option>' + getCats().map(c => `<option value="${c}"${c === currentVal ? ' selected' : ''}>${c}</option>`).join('');
+
+  // Pills
+  const pillsDiv = document.getElementById('cat-pills');
+  pillsDiv.innerHTML = `<div class="cat-pill ${activePillFilter === '' ? 'active' : ''}" onclick="filterByPill(this, '')">All</div>` +
+    getCats().map(c => `<div class="cat-pill ${activePillFilter === c ? 'active' : ''}" onclick="filterByPill(this, '${c}')">${c}</div>`).join('');
+
+  let filtered = items;
+  if (search) filtered = filtered.filter(i => i.name.toLowerCase().includes(search) || i.category.toLowerCase().includes(search));
+  if (catFilter) filtered = filtered.filter(i => i.category === catFilter);
+  if (activePillFilter) filtered = filtered.filter(i => i.category === activePillFilter);
+  if (statusFilter) filtered = filtered.filter(i => getStatus(i) === statusFilter);
+
+  const tbody = document.getElementById('inventory-table-body');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No items match your search.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    const s = getStatus(item);
+    return `<tr>
+      <td><strong>${item.name}</strong>${item.notes ? `<div style="font-size:11px;color:var(--muted);">${item.notes}</div>` : ''}</td>
+      <td><span style="font-size:12px;">${item.category}</span></td>
+      <td style="font-weight:600;">${item.qty}</td>
+      <td>${stockBar(item)}</td>
+      <td style="font-size:12px;color:var(--muted);">${item.threshold}</td>
+      <td>GH₵ ${parseFloat(item.price).toFixed(2)}</td>
+      <td>${statusBadge(s)}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="tbl-btn" onclick="openEditModal(${item.id})">Edit</button>
+          <button class="tbl-btn danger" onclick="deleteItem(${item.id})">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterByPill(el, cat) {
+  activePillFilter = cat;
+  renderInventory();
+}
+
+// ============ ALERTS ============
+function renderAlerts() {
+  const alertItems = items.filter(i => getStatus(i) !== 'ok');
+  const container = document.getElementById('alerts-container');
+  if (alertItems.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:var(--muted); padding:3rem; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);">🎉 All items are well stocked! No alerts.</div>';
+    return;
+  }
+
+  const out = alertItems.filter(i => getStatus(i) === 'out');
+  const low = alertItems.filter(i => getStatus(i) === 'low');
+
+  let html = '';
+  if (out.length > 0) {
+    html += `<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--red);">🔴 Out of Stock (${out.length})</div>`;
+    html += out.map(item => `
+      <div class="alert-card out">
+        <div class="alert-icon">🔴</div>
+        <div class="alert-body">
+          <div class="alert-title">${item.name}</div>
+          <div class="alert-desc">${item.category} · Price: GH₵ ${parseFloat(item.price).toFixed(2)}</div>
+          <div class="alert-desc" style="margin-top:3px;">Zero stock remaining. Immediate restock needed.</div>
+          <div class="alert-actions">
+            <button class="tbl-btn" onclick="openEditModal(${item.id})">Update Qty</button>
+            <button class="tbl-btn" onclick="quickNotif(${item.id})">📨 Send Restock Request</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  if (low.length > 0) {
+    html += `<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin:16px 0 10px;color:var(--amber);">🟡 Running Low (${low.length})</div>`;
+    html += low.map(item => `
+      <div class="alert-card low">
+        <div class="alert-icon">🟡</div>
+        <div class="alert-body">
+          <div class="alert-title">${item.name}</div>
+          <div class="alert-desc">${item.category} · ${item.qty} remaining (alert at ${item.threshold})</div>
+          <div class="alert-actions">
+            <button class="tbl-btn" onclick="openEditModal(${item.id})">Update Qty</button>
+            <button class="tbl-btn" onclick="quickNotif(${item.id})">📨 Send Restock Request</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  container.innerHTML = html;
+}
+
+// ============ ADD ITEM ============
+function addItem() {
+  const name = document.getElementById('add-name').value.trim();
+  const cat = document.getElementById('add-cat').value;
+  const qty = parseInt(document.getElementById('add-qty').value);
+  const threshold = parseInt(document.getElementById('add-threshold').value);
+  const price = parseFloat(document.getElementById('add-price').value);
+  const notes = document.getElementById('add-notes').value.trim();
+
+  if (!name || isNaN(qty) || isNaN(threshold) || isNaN(price)) {
+    showToast('Please fill all required fields.', 'error'); return;
+  }
+
+  const newItem = { id: Date.now(), name, category: cat, qty, threshold, price, notes };
+  items.push(newItem);
+  saveItems();
+
+  // Clear form
+  ['add-name','add-qty','add-threshold','add-price','add-notes'].forEach(id => document.getElementById(id).value = '');
+
+  checkAlerts();
+  showToast(`"${name}" added successfully!`, 'success');
+  renderDashboard();
+}
+
+// ============ CSV UPLOAD ============
+function handleCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const lines = e.target.result.split('\n').filter(l => l.trim());
+    let added = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 5) continue;
+      const [name, category, qty, threshold, price] = parts.map(p => p.trim());
+      if (!name) continue;
+      items.push({ id: Date.now() + i, name, category: category || 'Other', qty: parseInt(qty) || 0, threshold: parseInt(threshold) || 10, price: parseFloat(price) || 0, notes: '' });
+      added++;
+    }
+    saveItems();
+    checkAlerts();
+    showToast(`${added} items imported from CSV!`, 'success');
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function downloadSampleCSV() {
+  const csv = `Name,Category,Qty,Threshold,Price\nMilo 400g,Beverages,30,8,18.50\nIndomie Noodles,Snacks,100,20,1.50\nCowbell Milk,Beverages,20,5,12.00\nFrytol Oil 2L,Cooking Essentials,15,5,45.00`;
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shopkepa_sample.csv';
+  a.click();
+}
+
+// ============ QUICK UPDATE ============
+function populateAddSelects() {
+  const sel = document.getElementById('update-item-select');
+  sel.innerHTML = '<option value="">-- Choose item --</option>' + items.map(i => `<option value="${i.id}">${i.name} (Current: ${i.qty})</option>`).join('');
+}
+
+function quickUpdateQty() {
+  const id = parseInt(document.getElementById('update-item-select').value);
+  const qty = parseInt(document.getElementById('update-qty').value);
+  if (!id || isNaN(qty)) { showToast('Please select an item and enter quantity.', 'error'); return; }
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.qty = qty;
+  saveItems();
+  checkAlerts();
+  showToast(`"${item.name}" updated to ${qty} units.`, 'success');
+  populateAddSelects();
+}
+
+// ============ EDIT MODAL ============
+function openEditModal(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-name').value = item.name;
+  document.getElementById('edit-cat').value = item.category;
+  document.getElementById('edit-qty').value = item.qty;
+  document.getElementById('edit-threshold').value = item.threshold;
+  document.getElementById('edit-price').value = item.price;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+function saveEdit() {
+  const id = parseInt(document.getElementById('edit-id').value);
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.name = document.getElementById('edit-name').value;
+  item.category = document.getElementById('edit-cat').value;
+  item.qty = parseInt(document.getElementById('edit-qty').value);
+  item.threshold = parseInt(document.getElementById('edit-threshold').value);
+  item.price = parseFloat(document.getElementById('edit-price').value);
+  saveItems();
+  checkAlerts();
+  closeModal();
+  renderInventory();
+  renderDashboard();
+  renderAlerts();
+  showToast(`"${item.name}" updated.`, 'success');
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item from your inventory?')) return;
+  items = items.filter(i => i.id !== id);
+  saveItems();
+  renderInventory();
+  renderDashboard();
+  renderAlerts();
+  showToast('Item removed from inventory.', 'warning');
+}
+
+// ============ NOTIFICATIONS ============
+function populateNotifSelects() {
+  const sel = document.getElementById('notif-item-select');
+  const alertItems = items.filter(i => getStatus(i) !== 'ok');
+  const others = items.filter(i => getStatus(i) === 'ok');
+  sel.innerHTML = '<option value="">-- Select item --</option>' +
+    (alertItems.length ? '<optgroup label="⚠️ Needs Restocking">' + alertItems.map(i => `<option value="${i.id}">${i.name} (${getStatus(i) === 'out' ? 'OUT' : i.qty + ' left'})</option>`).join('') + '</optgroup>' : '') +
+    (others.length ? '<optgroup label="Other Items">' + others.map(i => `<option value="${i.id}">${i.name}</option>`).join('') + '</optgroup>' : '');
+
+  renderNotifHistory();
+}
+
+function sendNotification() {
+  const recipient = document.getElementById('notif-recipient').value.trim();
+  const phone = document.getElementById('notif-phone').value.trim();
+  const itemId = parseInt(document.getElementById('notif-item-select').value);
+  const qty = document.getElementById('notif-qty').value;
+  const urgency = document.getElementById('notif-urgency').value;
+  const message = document.getElementById('notif-message').value.trim();
+
+  if (!recipient || !itemId) { showToast('Please fill recipient name and select an item.', 'error'); return; }
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+
+  const urgencyText = urgency === 'urgent' ? 'URGENT' : urgency === 'low' ? 'Low Priority' : 'Normal';
+  const notifEntry = {
+    id: Date.now(),
+    recipient, phone,
+    item: item.name,
+    qty: qty || 'not specified',
+    urgency: urgencyText,
+    message,
+    time: new Date().toLocaleString('en-GH', { dateStyle: 'short', timeStyle: 'short' })
+  };
+
+  notifHistory.unshift(notifEntry);
+
+  // Also push to bell notifications
+  notifications.unshift({
+    type: urgency === 'urgent' ? 'out' : 'low',
+    msg: `Restock request sent to ${recipient} for "${item.name}" (${urgencyText})`,
+    time: notifEntry.time
+  });
+
+  saveNotifs();
+  updateNotifBadge();
+  renderNotifHistory();
+  showToast(`Restock request sent to ${recipient}!`, 'success');
+
+  // Clear form
+  document.getElementById('notif-recipient').value = '';
+  document.getElementById('notif-phone').value = '';
+  document.getElementById('notif-qty').value = '';
+  document.getElementById('notif-message').value = '';
+}
+
+function sendWhatsApp() {
+  const recipient = document.getElementById('notif-recipient').value.trim();
+  const phone = document.getElementById('notif-phone').value.trim();
+  const itemId = parseInt(document.getElementById('notif-item-select').value);
+  const qty = document.getElementById('notif-qty').value;
+  const urgency = document.getElementById('notif-urgency').value;
+  const message = document.getElementById('notif-message').value.trim();
+
+  if (!itemId) { showToast('Please select an item first.', 'error'); return; }
+  const item = items.find(i => i.id === itemId);
+  const status = getStatus(item);
+
+  const shopName = document.getElementById('shop-name') ? document.getElementById('shop-name').value || "Maame Ama's Provision Shop" : "Our Shop";
+  const urgencyText = urgency === 'urgent' ? '🔴 URGENT' : urgency === 'low' ? '🟡 Low Priority' : '🟠 Normal';
+
+  let text = `*Restock Request – ${shopName}*\n\n`;
+  text += `Hello ${recipient || 'Supplier'},\n\n`;
+  text += `We need to restock the following item:\n`;
+  text += `📦 *${item.name}*\n`;
+  text += `Category: ${item.category}\n`;
+  text += `Current Stock: ${item.qty} units\n`;
+  if (qty) text += `Quantity to Order: ${qty} units\n`;
+  text += `Priority: ${urgencyText}\n`;
+  if (message) text += `\nNote: ${message}`;
+  text += `\n\nPlease arrange delivery at your earliest convenience. Thank you! 🙏`;
+
+  const cleanPhone = phone.replace(/\D/g, '');
+  const waUrl = `https://wa.me/${cleanPhone ? '233' + cleanPhone.slice(-9) : ''}?text=${encodeURIComponent(text)}`;
+  window.open(waUrl, '_blank');
+}
+
+function quickNotif(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  showPage('notifications');
+  setTimeout(() => {
+    const sel = document.getElementById('notif-item-select');
+    if (sel) sel.value = id;
+    document.getElementById('notif-urgency').value = getStatus(item) === 'out' ? 'urgent' : 'low';
+  }, 100);
+}
+
+function renderNotifHistory() {
+  const div = document.getElementById('notif-history');
+  if (notifHistory.length === 0) { div.innerHTML = '<div style="font-size:13px;color:var(--muted);">No notifications sent yet.</div>'; return; }
+  div.innerHTML = notifHistory.slice(0, 5).map(n => `
+    <div style="border-bottom:1px solid var(--border);padding:8px 0;">
+      <div style="font-size:12px;font-weight:700;">${n.item}</div>
+      <div style="font-size:11px;color:var(--muted);">To: <span class="notif-recipient-tag">${n.recipient}</span> · ${n.urgency}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${n.time}</div>
+    </div>`).join('');
+}
+
+// ============ ALERT CHECKER ============
+function checkAlerts() {
+  const problematic = items.filter(i => getStatus(i) !== 'ok');
+  problematic.forEach(item => {
+    const s = getStatus(item);
+    const msg = s === 'out'
+      ? `"${item.name}" is OUT OF STOCK. Restock immediately!`
+      : `"${item.name}" is running low – only ${item.qty} left (alert at ${item.threshold}).`;
+    const exists = notifications.find(n => n.msg === msg);
+    if (!exists) {
+      notifications.unshift({ type: s, msg, time: new Date().toLocaleString('en-GH', { dateStyle: 'short', timeStyle: 'short' }) });
+    }
+  });
+  saveNotifs();
+  updateNotifBadge();
+  renderNotifPanel();
+}
+
+function updateNotifBadge() {
+  const count = notifications.length;
+  const badge = document.getElementById('notif-count');
+  badge.textContent = count > 99 ? '99+' : count;
+  badge.style.display = count === 0 ? 'none' : 'flex';
+}
+
+function renderNotifPanel() {
+  const list = document.getElementById('notif-list');
+  if (notifications.length === 0) { list.innerHTML = '<div class="notif-empty">No notifications yet.</div>'; return; }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.type}">
+      <div class="notif-type">${n.type === 'out' ? '🔴 Out of Stock' : '🟡 Low Stock'}</div>
+      <div class="notif-msg">${n.msg}</div>
+      <div class="notif-time">${n.time}</div>
+    </div>`).join('');
+}
+
+function clearNotifications() {
+  notifications = [];
+  saveNotifs();
+  updateNotifBadge();
+  renderNotifPanel();
+}
+
+let notifOpen = false;
+function toggleNotifPanel() {
+  notifOpen = !notifOpen;
+  document.getElementById('notif-panel').classList.toggle('open', notifOpen);
+  if (notifOpen) renderNotifPanel();
+}
+function closeNotifPanel() {
+  notifOpen = false;
+  document.getElementById('notif-panel').classList.remove('open');
+}
+
+// ============ SETTINGS ============
+function saveSettings() {
+  showToast('Settings saved!', 'success');
+}
+
+function clearAll() {
+  if (!confirm('This will delete ALL your inventory data. Are you sure?')) return;
+  items = [];
+  notifications = [];
+  notifHistory = [];
+  saveItems();
+  saveNotifs();
+  renderDashboard();
+  renderInventory();
+  renderAlerts();
+  updateNotifBadge();
+  showToast('All data cleared.', 'warning');
+}
+
+// ============ TOAST ============
+function showToast(msg, type = '') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '✅', warning: '⚠️', error: '❌' };
+  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ============ INIT ============
+checkAlerts();
+renderDashboard();
+</script>
+</body>
+</html>
